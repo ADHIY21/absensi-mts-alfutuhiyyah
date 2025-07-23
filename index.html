@@ -1,0 +1,1957 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Absensi - MTs Al Futuhiyyah</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.0/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary-color: #0A5C36; /* Hijau Tua */
+            --secondary-color: #FFFFFF; /* Putih */
+            --accent-color: #0D7A48;
+            --light-green: #E8F5E9;
+            --danger-color: #DC2626;
+            --warning-color: #F59E0B;
+            --info-color: #3B82F6;
+            --success-color: #10B981;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #F9FAFB;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--accent-color);
+            transform: translateY(-2px);
+        }
+        
+        .header-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .card {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border-radius: 0.5rem;
+            background-color: white;
+        }
+        
+        .alfa-warning {
+            background-color: rgba(239, 68, 68, 0.2);
+        }
+        
+        .holiday-row {
+            background-color: #FEF3C7;
+        }
+        
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            
+            .print-only {
+                display: block !important;
+            }
+            
+            body {
+                background-color: white;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Page -->
+    <div id="loginPage" class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md w-full space-y-8 card p-8">
+            <div class="text-center">
+                <img class="mx-auto h-24 w-auto" src="https://iili.io/FEj6Osp.png" alt="MTs Al Futuhiyyah Logo">
+                <h2 class="mt-6 text-center text-2xl font-bold text-gray-900">MTs Al Futuhiyyah</h2>
+                <p class="mt-2 text-center text-sm text-gray-600">Kabupaten Boyolali</p>
+                <p class="text-center text-sm text-gray-600">Tahun Pelajaran 2025/2026</p>
+            </div>
+            <form id="loginForm" class="mt-8 space-y-6">
+                <div class="rounded-md shadow-sm -space-y-px">
+                    <div>
+                        <label for="username" class="sr-only">Username</label>
+                        <input id="username" name="username" type="text" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm" placeholder="Username">
+                    </div>
+                    <div>
+                        <label for="password" class="sr-only">Password</label>
+                        <input id="password" name="password" type="password" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm" placeholder="Password">
+                    </div>
+                </div>
+                <div id="loginError" class="text-red-600 text-sm text-center hidden">
+                    Username atau Password salah!
+                </div>
+                <div>
+                    <button type="submit" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white btn-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        <span class="absolute left-0 inset-y-0 flex items-center pl-3">
+                            <svg class="h-5 w-5 text-green-100 group-hover:text-green-200" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                            </svg>
+                        </span>
+                        Login
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Application (Hidden initially) -->
+    <div id="appContainer" class="hidden">
+        <!-- Header -->
+        <header class="bg-white header-shadow">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <div class="flex items-center space-x-4 mb-4 md:mb-0">
+                        <img class="h-12 w-auto" src="https://iili.io/FEj6Osp.png" alt="MTs Al Futuhiyyah Logo">
+                        <div>
+                            <h1 class="text-xl font-bold text-gray-900">MTs Al Futuhiyyah</h1>
+                            <p class="text-sm text-gray-600">Tahun Pelajaran 2025/2026</p>
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-end">
+                        <div id="currentDate" class="text-sm font-medium text-gray-700"></div>
+                        <button id="logoutBtn" class="text-sm text-red-600 hover:text-red-800 mt-1">Logout</button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Home Page -->
+            <div id="homePage" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="card p-6 flex flex-col items-center justify-center hover:shadow-lg transition-all cursor-pointer" id="morningAttendanceBtn">
+                    <div class="bg-green-100 p-4 rounded-full mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                    </div>
+                    <h2 class="text-xl font-semibold text-gray-900">Absensi Pagi</h2>
+                    <p class="text-gray-600 text-sm mt-2">Rekam kehadiran siswa di pagi hari</p>
+                </div>
+                <div class="card p-6 flex flex-col items-center justify-center hover:shadow-lg transition-all cursor-pointer" id="afternoonAttendanceBtn">
+                    <div class="bg-blue-100 p-4 rounded-full mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 4v16H4V4M4 8h16M4 16h16" />
+                        </svg>
+                    </div>
+                    <h2 class="text-xl font-semibold text-gray-900">Absensi Siang</h2>
+                    <p class="text-gray-600 text-sm mt-2">Rekam kehadiran siswa di siang hari</p>
+                </div>
+                <div class="card p-6 flex flex-col items-center justify-center hover:shadow-lg transition-all cursor-pointer" id="viewReportBtn">
+                    <div class="bg-yellow-100 p-4 rounded-full mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                    </div>
+                    <h2 class="text-xl font-semibold text-gray-900">Lihat Rekap Absensi</h2>
+                    <p class="text-gray-600 text-sm mt-2">Lihat dan cetak laporan absensi siswa</p>
+                </div>
+                <div class="card p-6 flex flex-col items-center justify-center hover:shadow-lg transition-all cursor-pointer" id="manageStudentsBtn">
+                    <div class="bg-purple-100 p-4 rounded-full mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                    </div>
+                    <h2 class="text-xl font-semibold text-gray-900">Kelola Data Siswa</h2>
+                    <p class="text-gray-600 text-sm mt-2">Tambah, edit, dan hapus data siswa</p>
+                </div>
+            </div>
+
+            <!-- Attendance Page -->
+            <div id="attendancePage" class="hidden">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+                    <h2 id="attendanceTitle" class="text-2xl font-bold text-gray-900 mb-4 md:mb-0">Absensi Pagi</h2>
+                    <div class="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4">
+                        <div>
+                            <label for="classFilter" class="block text-sm font-medium text-gray-700">Filter Kelas</label>
+                            <select id="classFilter" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md">
+                                <option value="all">Semua Kelas</option>
+                                <!-- Classes will be populated dynamically -->
+                            </select>
+                        </div>
+                        <div>
+                            <label for="attendanceDate" class="block text-sm font-medium text-gray-700">Tanggal</label>
+                            <input type="date" id="attendanceDate" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Holiday Toggle and Attendance Actions -->
+                <div class="mb-6 flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
+                    <div class="flex items-center">
+                        <input id="holidayToggle" type="checkbox" class="h-5 w-5 text-green-600 focus:ring-green-500 border-gray-300 rounded">
+                        <label for="holidayToggle" class="ml-2 block text-sm text-gray-900">
+                            Tandai sebagai Hari Libur
+                        </label>
+                    </div>
+                    <div id="holidayInfo" class="hidden bg-yellow-100 text-yellow-800 px-4 py-2 rounded-md flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                        </svg>
+                        <span>Hari ini ditandai sebagai hari libur. Semua siswa akan tercatat sebagai "Libur".</span>
+                    </div>
+                    <div id="fridayInfo" class="hidden bg-yellow-100 text-yellow-800 px-4 py-2 rounded-md flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                        </svg>
+                        <span>Hari Jumat adalah hari libur sekolah. Semua siswa akan tercatat sebagai "Libur".</span>
+                    </div>
+                </div>
+
+                <!-- Attendance Actions -->
+                <div class="mb-6 flex flex-wrap gap-2">
+                    <button id="markAllPresentBtn" class="px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-1" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                        </svg>
+                        Hadir Semua
+                    </button>
+                    <button id="resetAttendanceBtn" class="px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-1" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+                        </svg>
+                        Reset Absensi
+                    </button>
+                </div>
+
+                <div class="card p-6 overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kelas</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nomor</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentList" class="bg-white divide-y divide-gray-200">
+                            <!-- Student data will be populated here -->
+                            <tr>
+                                <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">
+                                    <div class="flex items-center justify-center">
+                                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Memuat data siswa...
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mt-6 flex flex-col md:flex-row justify-between">
+                    <button id="backToHomeBtn" class="mb-4 md:mb-0 px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        Kembali ke Beranda
+                    </button>
+                    <button id="submitAttendanceBtn" class="px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white btn-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        Kirim Absensi
+                    </button>
+                </div>
+
+                <div id="attendanceSuccess" class="hidden mt-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
+                    <div class="flex">
+                        <svg class="h-5 w-5 text-green-500 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                        </svg>
+                        <p>Absensi berhasil dikirim!</p>
+                    </div>
+                    <button id="viewReportBtnSuccess" class="mt-2 px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white btn-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        Lihat Rekap Absensi
+                    </button>
+                </div>
+
+                <div id="attendanceError" class="hidden mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+                    <div class="flex">
+                        <svg class="h-5 w-5 text-red-500 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                        </svg>
+                        <div>
+                            <p>Siswa berikut belum diabsen:</p>
+                            <ul id="unattendedStudents" class="list-disc list-inside mt-1"></ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reset Attendance Confirmation Modal -->
+                <div id="resetConfirmModal" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50 hidden">
+                    <div class="bg-white rounded-lg p-6 max-w-md mx-auto">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Konfirmasi Reset Absensi</h3>
+                        <p class="text-gray-700 mb-4">Apakah Anda yakin ingin mereset data absensi untuk tanggal ini? Data siswa akan tetap ada, tetapi semua status kehadiran akan dihapus.</p>
+                        <div class="flex justify-end space-x-3">
+                            <button id="cancelResetBtn" class="px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                Batal
+                            </button>
+                            <button id="confirmResetBtn" class="px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                Reset Absensi
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Report Page -->
+            <div id="reportPage" class="hidden">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4 md:mb-0">Rekap Absensi</h2>
+                    <div class="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4">
+                        <div>
+                            <label for="reportType" class="block text-sm font-medium text-gray-700">Tampilan</label>
+                            <select id="reportType" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md">
+                                <option value="weekly">Mingguan</option>
+                                <option value="monthly">Bulanan</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="reportClassFilter" class="block text-sm font-medium text-gray-700">Kelas</label>
+                            <select id="reportClassFilter" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md">
+                                <option value="all">Semua Kelas</option>
+                                <!-- Classes will be populated dynamically -->
+                            </select>
+                        </div>
+                        <div id="weekSelector" class="flex-1">
+                            <label for="reportWeek" class="block text-sm font-medium text-gray-700">Minggu</label>
+                            <input type="week" id="reportWeek" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md">
+                        </div>
+                        <div id="monthSelector" class="hidden flex-1">
+                            <label for="reportMonth" class="block text-sm font-medium text-gray-700">Bulan</label>
+                            <input type="month" id="reportMonth" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Search Student for Editing -->
+                <div class="mb-6 card p-4">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Edit Absensi Siswa</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label for="editStudentSearch" class="block text-sm font-medium text-gray-700">Cari Siswa</label>
+                            <input type="text" id="editStudentSearch" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md" placeholder="Masukkan nama siswa...">
+                        </div>
+                        <div>
+                            <label for="editAttendanceDate" class="block text-sm font-medium text-gray-700">Tanggal</label>
+                            <input type="date" id="editAttendanceDate" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md">
+                        </div>
+                        <div>
+                            <label for="editAttendanceSession" class="block text-sm font-medium text-gray-700">Sesi</label>
+                            <select id="editAttendanceSession" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md">
+                                <option value="morning">Pagi</option>
+                                <option value="afternoon">Siang</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="searchResults" class="mt-4 hidden">
+                        <h4 class="text-md font-medium text-gray-900 mb-2">Hasil Pencarian</h4>
+                        <div class="max-h-60 overflow-y-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kelas</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nomor</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="searchResultsList" class="bg-white divide-y divide-gray-200">
+                                    <!-- Search results will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card p-6 overflow-x-auto" id="reportContainer">
+                    <div class="print-header hidden print:block mb-4">
+                        <div class="flex items-center justify-center">
+                            <img class="h-16 w-auto" src="https://iili.io/FEj6Osp.png" alt="MTs Al Futuhiyyah Logo">
+                            <div class="ml-4 text-center">
+                                <h1 class="text-xl font-bold">MTs Al Futuhiyyah Kabupaten Boyolali</h1>
+                                <p class="text-sm">Tahun Pelajaran 2025/2026</p>
+                                <p class="text-sm" id="printReportTitle">Rekap Absensi Mingguan</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <table class="min-w-full divide-y divide-gray-200" id="reportTable">
+                        <thead class="bg-gray-50">
+                            <tr id="reportTableHeader">
+                                <th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kelas</th>
+                                <th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nomor</th>
+                                <th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
+                                <!-- Date columns will be added dynamically -->
+                            </tr>
+                        </thead>
+                        <tbody id="reportTableBody" class="bg-white divide-y divide-gray-200">
+                            <!-- Report data will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mt-6 flex flex-col md:flex-row justify-between">
+                    <button id="backToHomeFromReportBtn" class="mb-4 md:mb-0 px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        Kembali ke Beranda
+                    </button>
+                    <button id="printReportBtn" class="px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white btn-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        Cetak Rekap Absensi
+                    </button>
+                </div>
+
+                <!-- Edit Attendance Modal -->
+                <div id="editAttendanceModal" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50 hidden">
+                    <div class="bg-white rounded-lg p-6 max-w-md mx-auto">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Edit Status Kehadiran</h3>
+                        <div id="editStudentInfo" class="mb-4">
+                            <p><span class="font-medium">Nama:</span> <span id="editStudentName"></span></p>
+                            <p><span class="font-medium">Kelas:</span> <span id="editStudentClass"></span></p>
+                            <p><span class="font-medium">Tanggal:</span> <span id="editStudentDate"></span></p>
+                            <p><span class="font-medium">Sesi:</span> <span id="editStudentSession"></span></p>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Status Kehadiran</label>
+                            <div class="space-y-2">
+                                <label class="inline-flex items-center">
+                                    <input type="radio" name="editAttendanceStatus" value="hadir" class="form-radio h-4 w-4 text-green-600">
+                                    <span class="ml-2 text-gray-700">Hadir</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="radio" name="editAttendanceStatus" value="sakit" class="form-radio h-4 w-4 text-yellow-600">
+                                    <span class="ml-2 text-gray-700">Sakit</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="radio" name="editAttendanceStatus" value="izin" class="form-radio h-4 w-4 text-blue-600">
+                                    <span class="ml-2 text-gray-700">Izin</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="radio" name="editAttendanceStatus" value="alfa" class="form-radio h-4 w-4 text-red-600">
+                                    <span class="ml-2 text-gray-700">Alfa</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="radio" name="editAttendanceStatus" value="libur" class="form-radio h-4 w-4 text-gray-600">
+                                    <span class="ml-2 text-gray-700">Libur</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="flex justify-end space-x-3">
+                            <button id="cancelEditBtn" class="px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                Batal
+                            </button>
+                            <button id="saveEditBtn" class="px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                Simpan
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Manage Students Page -->
+            <div id="manageStudentsPage" class="hidden">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4 md:mb-0">Kelola Data Siswa</h2>
+                    <div class="flex space-x-2">
+                        <button id="addStudentBtn" class="px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white btn-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
+                            </svg>
+                            Tambah Siswa
+                        </button>
+                        <button id="bulkAddStudentBtn" class="px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M5.5 13a3.5 3.5 0 01-.369-6.98 4 4 0 117.753-1.977A4.5 4.5 0 1113.5 13H11V9.413l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13H5.5z" />
+                                <path d="M9 13h2v5a1 1 0 11-2 0v-5z" />
+                            </svg>
+                            Tambah Masal
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Add Student Form (Hidden initially) -->
+                <div id="addStudentForm" class="card p-6 mb-6 hidden">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Tambah Siswa Baru</h3>
+                    <form id="studentForm" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label for="studentClass" class="block text-sm font-medium text-gray-700">Kelas</label>
+                                <select id="studentClass" name="studentClass" required class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md">
+                                    <!-- Classes will be populated dynamically -->
+                                </select>
+                            </div>
+                            <div>
+                                <label for="studentNumber" class="block text-sm font-medium text-gray-700">Nomor</label>
+                                <input type="number" id="studentNumber" name="studentNumber" min="1" required class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md">
+                            </div>
+                            <div>
+                                <label for="studentName" class="block text-sm font-medium text-gray-700">Nama</label>
+                                <input type="text" id="studentName" name="studentName" required class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md">
+                            </div>
+                        </div>
+                        <div class="flex justify-end space-x-3">
+                            <button type="button" id="cancelAddStudent" class="px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                Batal
+                            </button>
+                            <button type="submit" class="px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white btn-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                Simpan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Bulk Add Student Form (Hidden initially) -->
+                <div id="bulkAddStudentForm" class="card p-6 mb-6 hidden">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Tambah Siswa Secara Masal</h3>
+                    <form id="bulkStudentForm" class="space-y-4">
+                        <div>
+                            <label for="bulkStudentClass" class="block text-sm font-medium text-gray-700">Kelas</label>
+                            <select id="bulkStudentClass" name="bulkStudentClass" required class="mt-1 block w-full md:w-1/3 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md">
+                                <!-- Classes will be populated dynamically -->
+                            </select>
+                        </div>
+                        <div>
+                            <label for="bulkStudentData" class="block text-sm font-medium text-gray-700">Data Siswa (Format: Nomor, Nama)</label>
+                            <p class="text-xs text-gray-500 mb-2">Masukkan satu siswa per baris dengan format: nomor, nama</p>
+                            <textarea id="bulkStudentData" name="bulkStudentData" rows="10" required class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md" placeholder="1, Ahmad Fauzi&#10;2, Siti Nurhaliza&#10;3, Budi Santoso"></textarea>
+                        </div>
+                        <div class="flex justify-end space-x-3">
+                            <button type="button" id="cancelBulkAddStudent" class="px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                Batal
+                            </button>
+                            <button type="submit" class="px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                Simpan Semua
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Student List -->
+                <div class="card p-6 overflow-x-auto">
+                    <div class="mb-4">
+                        <label for="manageClassFilter" class="block text-sm font-medium text-gray-700">Filter Kelas</label>
+                        <select id="manageClassFilter" class="mt-1 block w-48 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md">
+                            <option value="all">Semua Kelas</option>
+                            <!-- Classes will be populated dynamically -->
+                        </select>
+                    </div>
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kelas</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nomor</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="manageStudentList" class="bg-white divide-y divide-gray-200">
+                            <!-- Student data will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="studentSuccess" class="hidden mt-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
+                    <div class="flex">
+                        <svg class="h-5 w-5 text-green-500 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                        </svg>
+                        <p id="studentSuccessMessage">Data siswa berhasil disimpan!</p>
+                    </div>
+                </div>
+
+                <div class="mt-6">
+                    <button id="backToHomeFromManageBtn" class="px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        Kembali ke Beranda
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Global variables
+        let students = [];
+        let attendanceData = {
+            morning: {},
+            afternoon: {}
+        };
+        let currentAttendanceType = 'morning';
+        let editingStudentId = null;
+        let holidayDates = {}; // To store custom holiday dates
+        let editingAttendanceData = null; // For storing data when editing attendance
+        
+        // Define all available classes
+        const allClasses = ['7A', '7B', '7C', '8A', '8B', '8C', '9A', '9B', '9C', '9D', '9E', '9F'];
+        
+        // Define school days (1 = Monday, 7 = Sunday)
+        const schoolDays = [1, 2, 3, 4, 6, 7]; // Monday, Tuesday, Wednesday, Thursday, Saturday, Sunday
+        const holidayDays = [5]; // Friday is a holiday
+        
+        // Helper functions
+        function formatDate(date) {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            return date.toLocaleDateString('id-ID', options);
+        }
+        
+        function getISODate(date) {
+            return date.toISOString().split('T')[0];
+        }
+        
+        function showPage(pageId) {
+            document.querySelectorAll('#loginPage, #appContainer, #homePage, #attendancePage, #reportPage, #manageStudentsPage').forEach(page => {
+                page.classList.add('hidden');
+            });
+            
+            document.getElementById(pageId).classList.remove('hidden');
+            
+            if (pageId !== 'loginPage') {
+                document.getElementById('appContainer').classList.remove('hidden');
+            }
+        }
+        
+        // Check if a date is a holiday
+        function isHoliday(date) {
+            const dateStr = getISODate(date);
+            const dayOfWeek = date.getDay() === 0 ? 7 : date.getDay(); // Convert Sunday from 0 to 7
+            
+            // Check if it's a custom holiday or Friday (day 5)
+            return holidayDates[dateStr] || holidayDays.includes(dayOfWeek);
+        }
+        
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set current date
+            const today = new Date();
+            document.getElementById('currentDate').textContent = formatDate(today);
+            document.getElementById('attendanceDate').value = getISODate(today);
+            document.getElementById('editAttendanceDate').value = getISODate(today);
+            
+            // Set default week and month for reports
+            const currentWeek = getISOWeek(today);
+            document.getElementById('reportWeek').value = `${today.getFullYear()}-W${currentWeek.toString().padStart(2, '0')}`;
+            document.getElementById('reportMonth').value = `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}`;
+            
+            // Populate class filters
+            populateClassFilters();
+            
+            // Load student data
+            fetchStudentData();
+            
+            // Event listeners
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+            document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+            document.getElementById('morningAttendanceBtn').addEventListener('click', () => openAttendancePage('morning'));
+            document.getElementById('afternoonAttendanceBtn').addEventListener('click', () => openAttendancePage('afternoon'));
+            document.getElementById('viewReportBtn').addEventListener('click', openReportPage);
+            document.getElementById('viewReportBtnSuccess').addEventListener('click', openReportPage);
+            document.getElementById('manageStudentsBtn').addEventListener('click', openManageStudentsPage);
+            document.getElementById('backToHomeBtn').addEventListener('click', () => showPage('homePage'));
+            document.getElementById('backToHomeFromReportBtn').addEventListener('click', () => showPage('homePage'));
+            document.getElementById('backToHomeFromManageBtn').addEventListener('click', () => showPage('homePage'));
+            document.getElementById('submitAttendanceBtn').addEventListener('click', submitAttendance);
+            document.getElementById('printReportBtn').addEventListener('click', printReport);
+            document.getElementById('classFilter').addEventListener('change', filterStudentsByClass);
+            document.getElementById('reportClassFilter').addEventListener('change', generateReport);
+            document.getElementById('manageClassFilter').addEventListener('change', filterManageStudentsByClass);
+            document.getElementById('reportType').addEventListener('change', handleReportTypeChange);
+            document.getElementById('reportWeek').addEventListener('change', generateReport);
+            document.getElementById('reportMonth').addEventListener('change', generateReport);
+            document.getElementById('addStudentBtn').addEventListener('click', showAddStudentForm);
+            document.getElementById('cancelAddStudent').addEventListener('click', hideAddStudentForm);
+            document.getElementById('studentForm').addEventListener('submit', handleAddStudent);
+            document.getElementById('bulkAddStudentBtn').addEventListener('click', showBulkAddStudentForm);
+            document.getElementById('cancelBulkAddStudent').addEventListener('click', hideBulkAddStudentForm);
+            document.getElementById('bulkStudentForm').addEventListener('submit', handleBulkAddStudent);
+            document.getElementById('attendanceDate').addEventListener('change', handleAttendanceDateChange);
+            document.getElementById('holidayToggle').addEventListener('change', handleHolidayToggle);
+            document.getElementById('markAllPresentBtn').addEventListener('click', markAllPresent);
+            document.getElementById('resetAttendanceBtn').addEventListener('click', showResetConfirmation);
+            document.getElementById('cancelResetBtn').addEventListener('click', hideResetConfirmation);
+            document.getElementById('confirmResetBtn').addEventListener('click', resetAttendance);
+            
+            // Edit attendance event listeners
+            document.getElementById('editStudentSearch').addEventListener('input', searchStudents);
+            document.getElementById('editAttendanceDate').addEventListener('change', searchStudents);
+            document.getElementById('editAttendanceSession').addEventListener('change', searchStudents);
+            document.getElementById('cancelEditBtn').addEventListener('click', hideEditAttendanceModal);
+            document.getElementById('saveEditBtn').addEventListener('click', saveEditedAttendance);
+        });
+        
+        // Login functionality
+        function handleLogin(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (username === 'BP' && password === '12345') {
+                showPage('homePage');
+                document.getElementById('loginError').classList.add('hidden');
+            } else {
+                document.getElementById('loginError').classList.remove('hidden');
+            }
+        }
+        
+        function handleLogout() {
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            showPage('loginPage');
+        }
+        
+        // Populate class filters
+        function populateClassFilters() {
+            const classFilters = document.querySelectorAll('#classFilter, #reportClassFilter, #manageClassFilter, #studentClass, #bulkStudentClass');
+            
+            classFilters.forEach(filter => {
+                // Clear existing options except "All Classes" for filters
+                const isSelectClass = filter.id === 'studentClass' || filter.id === 'bulkStudentClass';
+                while (filter.options.length > (isSelectClass ? 0 : 1)) {
+                    filter.remove(isSelectClass ? 0 : 1);
+                }
+                
+                // Add class options
+                allClasses.forEach(className => {
+                    const option = document.createElement('option');
+                    option.value = className;
+                    option.textContent = `Kelas ${className}`;
+                    filter.appendChild(option);
+                });
+            });
+        }
+        
+        // Fetch student data from Google Sheets
+        function fetchStudentData() {
+            // Use the Class 7 data URL provided
+            const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTddTezQskXnHloeez-AZNHNE5nb1lS4_cQAH7fnUs4bGj9fzgQjvOXyGqsKAVKjspcIRFQL-sXlylL/pub?output=csv';
+            
+            Papa.parse(csvUrl, {
+                download: true,
+                header: true,
+                complete: function(results) {
+                    if (results.data && results.data.length > 0) {
+                        // Process the data and assign students to specific classes
+                        const processedStudents = [];
+                        let id = 1;
+                        
+                        // First, filter out empty rows
+                        const validData = results.data.filter(row => row.Nama && row.Nama.trim() !== '');
+                        
+                        // Distribute students across all classes
+                        const totalStudents = validData.length;
+                        const studentsPerClass = Math.ceil(totalStudents / allClasses.length);
+                        
+                        validData.forEach((student, index) => {
+                            // Determine class based on index
+                            const classIndex = Math.floor(index / studentsPerClass);
+                            const className = allClasses[classIndex] || allClasses[0]; // Fallback to first class if out of bounds
+                            
+                            // Calculate student number within their class
+                            const classNumber = (index % studentsPerClass) + 1;
+                            
+                            processedStudents.push({
+                                id: id++,
+                                class: className,
+                                number: classNumber,
+                                name: student.Nama.trim()
+                            });
+                        });
+                        
+                        students = processedStudents;
+                        console.log("Loaded and processed students:", students.length);
+                    } else {
+                        console.error('No data found in CSV or format is incorrect');
+                        // Use sample data as fallback
+                        generateSampleData();
+                    }
+                    
+                    // Update UI after data is loaded
+                    filterStudentsByClass();
+                },
+                error: function(error) {
+                    console.error('Failed to load student data from CSV:', error);
+                    // Use sample data as fallback
+                    generateSampleData();
+                    filterStudentsByClass();
+                }
+            });
+        }
+        
+        // Generate sample data for demo purposes
+        function generateSampleData() {
+            console.log("Generating sample data as fallback");
+            const names = [
+                'Ahmad Fauzi', 'Siti Nurhaliza', 'Budi Santoso', 'Dewi Lestari', 
+                'Eko Prasetyo', 'Fitri Handayani', 'Gunawan Wibisono', 'Hani Permata',
+                'Irfan Hakim', 'Joko Widodo', 'Kartika Sari', 'Lina Marlina',
+                'Muhammad Rizki', 'Nadia Putri', 'Oki Setiana', 'Putri Indah',
+                'Qori Sandika', 'Ratna Dewi', 'Surya Darma', 'Tia Amalia'
+            ];
+            
+            students = [];
+            let id = 1;
+            
+            allClasses.forEach(className => {
+                // Generate between 10-15 students per class
+                const studentCount = Math.floor(Math.random() * 6) + 10;
+                
+                for (let i = 1; i <= studentCount; i++) {
+                    const nameIndex = Math.floor(Math.random() * names.length);
+                    students.push({
+                        id: id++,
+                        class: className,
+                        number: i,
+                        name: names[nameIndex] + ' ' + className
+                    });
+                }
+            });
+        }
+        
+        // Filter students by class
+        function filterStudentsByClass() {
+            const selectedClass = document.getElementById('classFilter').value;
+            const filteredStudents = selectedClass === 'all' 
+                ? students 
+                : students.filter(student => student.class === selectedClass);
+            
+            populateStudentList(filteredStudents);
+        }
+        
+        // Handle attendance date change
+        function handleAttendanceDateChange() {
+            const dateInput = document.getElementById('attendanceDate');
+            const selectedDate = new Date(dateInput.value);
+            
+            // Check if the selected date is a holiday (Friday)
+            checkHolidayStatus(selectedDate);
+            
+            // Refresh student list
+            filterStudentsByClass();
+        }
+        
+        // Check if the selected date is a holiday
+        function checkHolidayStatus(date) {
+            const holidayToggle = document.getElementById('holidayToggle');
+            const holidayInfo = document.getElementById('holidayInfo');
+            const fridayInfo = document.getElementById('fridayInfo');
+            const dateStr = getISODate(date);
+            const dayOfWeek = date.getDay() === 0 ? 7 : date.getDay(); // Convert Sunday from 0 to 7
+            
+            // Reset displays
+            holidayInfo.classList.add('hidden');
+            fridayInfo.classList.add('hidden');
+            
+            // Check if it's a custom holiday
+            if (holidayDates[dateStr]) {
+                holidayToggle.checked = true;
+                holidayInfo.classList.remove('hidden');
+            } else {
+                holidayToggle.checked = false;
+            }
+            
+            // Check if it's Friday (day 5)
+            if (holidayDays.includes(dayOfWeek)) {
+                fridayInfo.classList.remove('hidden');
+            }
+        }
+        
+        // Handle holiday toggle
+        function handleHolidayToggle() {
+            const dateInput = document.getElementById('attendanceDate');
+            const selectedDate = new Date(dateInput.value);
+            const dateStr = getISODate(selectedDate);
+            const holidayToggle = document.getElementById('holidayToggle');
+            const holidayInfo = document.getElementById('holidayInfo');
+            
+            if (holidayToggle.checked) {
+                holidayDates[dateStr] = true;
+                holidayInfo.classList.remove('hidden');
+            } else {
+                delete holidayDates[dateStr];
+                holidayInfo.classList.add('hidden');
+            }
+            
+            // Refresh student list
+            filterStudentsByClass();
+        }
+        
+        // Mark all students as present
+        function markAllPresent() {
+            const selectedClass = document.getElementById('classFilter').value;
+            const filteredStudents = selectedClass === 'all' 
+                ? students 
+                : students.filter(student => student.class === selectedClass);
+            
+            filteredStudents.forEach(student => {
+                const attendanceInputs = document.querySelectorAll(`input[name="attendance-${student.id}"]`);
+                if (attendanceInputs.length > 0) {
+                    attendanceInputs[0].checked = true; // First option is "Hadir"
+                }
+            });
+        }
+        
+        // Show reset confirmation modal
+        function showResetConfirmation() {
+            document.getElementById('resetConfirmModal').classList.remove('hidden');
+        }
+        
+        // Hide reset confirmation modal
+        function hideResetConfirmation() {
+            document.getElementById('resetConfirmModal').classList.add('hidden');
+        }
+        
+        // Reset attendance data for the current date
+        function resetAttendance() {
+            const date = document.getElementById('attendanceDate').value;
+            const dateKey = `${date}-${currentAttendanceType}`;
+            
+            // Delete attendance data for this date
+            if (attendanceData[currentAttendanceType][dateKey]) {
+                delete attendanceData[currentAttendanceType][dateKey];
+            }
+            
+            // Hide modal and show success message
+            hideResetConfirmation();
+            document.getElementById('attendanceSuccess').classList.remove('hidden');
+            document.getElementById('attendanceError').classList.add('hidden');
+            document.getElementById('attendanceSuccess').querySelector('p').textContent = 'Data absensi berhasil direset!';
+            
+            // Refresh student list
+            filterStudentsByClass();
+            
+            // Scroll to success message
+            document.getElementById('attendanceSuccess').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Open attendance page
+        function openAttendancePage(type) {
+            currentAttendanceType = type;
+            document.getElementById('attendanceTitle').textContent = type === 'morning' ? 'Absensi Pagi' : 'Absensi Siang';
+            
+            // Hide success and error messages
+            document.getElementById('attendanceSuccess').classList.add('hidden');
+            document.getElementById('attendanceError').classList.add('hidden');
+            
+            // Check holiday status for the selected date
+            const selectedDate = new Date(document.getElementById('attendanceDate').value);
+            checkHolidayStatus(selectedDate);
+            
+            // Populate student list
+            filterStudentsByClass();
+            
+            showPage('attendancePage');
+        }
+        
+        // Populate student list for attendance
+        function populateStudentList(studentList) {
+            const studentListElement = document.getElementById('studentList');
+            studentListElement.innerHTML = '';
+            
+            if (studentList.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">
+                        Tidak ada data siswa untuk kelas yang dipilih
+                    </td>
+                `;
+                studentListElement.appendChild(row);
+                return;
+            }
+            
+            const date = document.getElementById('attendanceDate').value;
+            const selectedDate = new Date(date);
+            const dateKey = `${date}-${currentAttendanceType}`;
+            const isDateHoliday = isHoliday(selectedDate) || document.getElementById('holidayToggle').checked;
+            
+            // Sort students by class and then by number
+            const sortedStudents = [...studentList].sort((a, b) => {
+                if (a.class !== b.class) {
+                    return a.class.localeCompare(b.class);
+                }
+                return a.number - b.number;
+            });
+            
+            sortedStudents.forEach(student => {
+                const row = document.createElement('tr');
+                
+                // Get saved attendance status if available
+                const savedStatus = attendanceData[currentAttendanceType][dateKey]?.find(s => s.id === student.id)?.status || '';
+                
+                if (isDateHoliday) {
+                    // If it's a holiday, show holiday status
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${student.class}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${student.number}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${student.name}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                Libur
+                            </span>
+                        </td>
+                    `;
+                    row.classList.add('holiday-row');
+                } else {
+                    // Regular attendance options
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${student.class}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${student.number}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${student.name}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+                                <label class="inline-flex items-center">
+                                    <input type="radio" name="attendance-${student.id}" value="hadir" class="form-radio h-4 w-4 text-green-600" ${savedStatus === 'hadir' ? 'checked' : ''}>
+                                    <span class="ml-2 text-gray-700">Hadir</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="radio" name="attendance-${student.id}" value="sakit" class="form-radio h-4 w-4 text-yellow-600" ${savedStatus === 'sakit' ? 'checked' : ''}>
+                                    <span class="ml-2 text-gray-700">Sakit</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="radio" name="attendance-${student.id}" value="izin" class="form-radio h-4 w-4 text-blue-600" ${savedStatus === 'izin' ? 'checked' : ''}>
+                                    <span class="ml-2 text-gray-700">Izin</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="radio" name="attendance-${student.id}" value="alfa" class="form-radio h-4 w-4 text-red-600" ${savedStatus === 'alfa' ? 'checked' : ''}>
+                                    <span class="ml-2 text-gray-700">Alfa</span>
+                                </label>
+                            </div>
+                        </td>
+                    `;
+                }
+                
+                studentListElement.appendChild(row);
+            });
+        }
+        
+        // Submit attendance
+        function submitAttendance() {
+    const date = document.getElementById('attendanceDate').value;
+    const selectedDate = new Date(date);
+    const dateKey = `${date}-${currentAttendanceType}`;
+    const selectedClass = document.getElementById('classFilter').value;
+    const isDateHoliday = isHoliday(selectedDate) || document.getElementById('holidayToggle').checked;
+
+    const filteredStudents = selectedClass === 'all'
+        ? students
+        : students.filter(student => student.class === selectedClass);
+
+    const attendanceRecords = [];
+    const unattendedStudents = [];
+
+    if (isDateHoliday) {
+        filteredStudents.forEach(student => {
+            attendanceRecords.push({
+                date: date,
+                session: currentAttendanceType,
+                name: student.name,
+                class: student.class,
+                number: student.number,
+                status: 'libur'
+            });
+        });
+    } else {
+        filteredStudents.forEach(student => {
+            const inputs = document.querySelectorAll(`input[name="attendance-${student.id}"]`);
+            const selected = Array.from(inputs).find(input => input.checked);
+            if (!selected) {
+                unattendedStudents.push(student);
+            } else {
+                attendanceRecords.push({
+                    date: date,
+                    session: currentAttendanceType,
+                    name: student.name,
+                    class: student.class,
+                    number: student.number,
+                    status: selected.value
+                });
+            }
+        });
+
+        if (unattendedStudents.length > 0) {
+            const unattendedList = document.getElementById('unattendedStudents');
+            unattendedList.innerHTML = '';
+            unattendedStudents.forEach(s => {
+                const li = document.createElement('li');
+                li.textContent = `${s.name} (${s.class})`;
+                unattendedList.appendChild(li);
+            });
+            document.getElementById('attendanceError').classList.remove('hidden');
+            document.getElementById('attendanceSuccess').classList.add('hidden');
+            document.getElementById('attendanceError').scrollIntoView({ behavior: 'smooth' });
+            return;
+        }
+    }
+
+    // Simpan secara lokal
+    if (!attendanceData[currentAttendanceType][dateKey]) {
+        attendanceData[currentAttendanceType][dateKey] = [];
+    }
+
+    attendanceRecords.forEach(record => {
+        const existingIndex = attendanceData[currentAttendanceType][dateKey]
+            .findIndex(r => r.name === record.name);
+        if (existingIndex >= 0) {
+            attendanceData[currentAttendanceType][dateKey][existingIndex] = record;
+        } else {
+            attendanceData[currentAttendanceType][dateKey].push(record);
+        }
+    });
+
+    // Kirim ke Google Sheets
+    fetch("https://script.google.com/macros/s/AKfycbxfiStYJYZBF62sdExq7eq0vgxh6mHpftr_TRlc9IPJMzDJacWCydyaDyFxC6oI-Xe6FQ/exec", {
+        method: "POST",
+        body: JSON.stringify(attendanceRecords),
+        headers: {
+            "Content-Type": "application/json"
+        }
+    })
+    .then(res => res.text())
+    .then(response => {
+        console.log("Sukses kirim ke Google Sheets:", response);
+        document.getElementById('attendanceSuccess').classList.remove('hidden');
+        document.getElementById('attendanceError').classList.add('hidden');
+        document.getElementById('attendanceSuccess').querySelector('p').textContent = 'Absensi berhasil dikirim & disimpan ke Google Sheet!';
+        document.getElementById('attendanceSuccess').scrollIntoView({ behavior: 'smooth' });
+    })
+    .catch(err => {
+        console.error("Gagal kirim ke Google Sheets:", err);
+        alert("Gagal menyimpan ke Google Sheet. Periksa koneksi atau izin akses Google Script.");
+    });
+}
+
+        
+        // Generate attendance report
+        function generateReport() {
+            const reportType = document.getElementById('reportType').value;
+            const selectedClass = document.getElementById('reportClassFilter').value;
+            
+            document.getElementById('printReportTitle').textContent = 
+                `Rekap Absensi ${reportType === 'weekly' ? 'Mingguan' : 'Bulanan'}`;
+            
+            // Get filtered students
+            const filteredStudents = selectedClass === 'all' 
+                ? students 
+                : students.filter(student => student.class === selectedClass);
+            
+            // Sort students by class and then by number
+            const sortedStudents = [...filteredStudents].sort((a, b) => {
+                if (a.class !== b.class) {
+                    return a.class.localeCompare(b.class);
+                }
+                return a.number - b.number;
+            });
+            
+            // Get date range based on report type
+            let dateRange = [];
+            
+            if (reportType === 'weekly') {
+                const weekValue = document.getElementById('reportWeek').value;
+                dateRange = getWeekDates(weekValue);
+            } else {
+                const monthValue = document.getElementById('reportMonth').value;
+                dateRange = getMonthDates(monthValue);
+            }
+            
+            // Generate table header
+            const headerRow = document.getElementById('reportTableHeader');
+            headerRow.innerHTML = `
+                <th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kelas</th>
+                <th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nomor</th>
+                <th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
+            `;
+            
+            dateRange.forEach(date => {
+                const th1 = document.createElement('th');
+                th1.scope = 'col';
+                th1.className = 'px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider';
+                th1.innerHTML = `${formatShortDate(date)}<br>Pagi`;
+                headerRow.appendChild(th1);
+                
+                const th2 = document.createElement('th');
+                th2.scope = 'col';
+                th2.className = 'px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider';
+                th2.innerHTML = `${formatShortDate(date)}<br>Siang`;
+                headerRow.appendChild(th2);
+            });
+            
+            // Add summary columns
+            const thHadir = document.createElement('th');
+            thHadir.scope = 'col';
+            thHadir.className = 'px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider';
+            thHadir.textContent = 'Hadir';
+            headerRow.appendChild(thHadir);
+            
+            const thSakit = document.createElement('th');
+            thSakit.scope = 'col';
+            thSakit.className = 'px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider';
+            thSakit.textContent = 'Sakit';
+            headerRow.appendChild(thSakit);
+            
+            const thIzin = document.createElement('th');
+            thIzin.scope = 'col';
+            thIzin.className = 'px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider';
+            thIzin.textContent = 'Izin';
+            headerRow.appendChild(thIzin);
+            
+            const thAlfa = document.createElement('th');
+            thAlfa.scope = 'col';
+            thAlfa.className = 'px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider';
+            thAlfa.textContent = 'Alfa';
+            headerRow.appendChild(thAlfa);
+            
+            const thLibur = document.createElement('th');
+            thLibur.scope = 'col';
+            thLibur.className = 'px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider';
+            thLibur.textContent = 'Libur';
+            headerRow.appendChild(thLibur);
+            
+            // Generate table body
+            const tableBody = document.getElementById('reportTableBody');
+            tableBody.innerHTML = '';
+            
+            if (sortedStudents.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td colspan="${3 + dateRange.length * 2 + 5}" class="px-6 py-4 text-center text-sm text-gray-500">
+                        Tidak ada data siswa untuk kelas yang dipilih
+                    </td>
+                `;
+                tableBody.appendChild(row);
+                return;
+            }
+            
+            sortedStudents.forEach(student => {
+                const row = document.createElement('tr');
+                
+                // Count status occurrences for this student in the date range
+                let hadirCount = 0;
+                let sakitCount = 0;
+                let izinCount = 0;
+                let alfaCount = 0;
+                let liburCount = 0;
+                
+                // Add student info
+                row.innerHTML = `
+                    <td class="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${student.class}</td>
+                    <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500">${student.number}</td>
+                    <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900">${student.name}</td>
+                `;
+                
+                // Add attendance status for each date
+                dateRange.forEach(date => {
+                    const dateStr = getISODate(date);
+                    const morningKey = `${dateStr}-morning`;
+                    const afternoonKey = `${dateStr}-afternoon`;
+                    
+                    const morningStatus = attendanceData.morning[morningKey]?.find(s => s.id === student.id)?.status || '-';
+                    const afternoonStatus = attendanceData.afternoon[afternoonKey]?.find(s => s.id === student.id)?.status || '-';
+                    
+                    // Update counts
+                    if (morningStatus === 'hadir') hadirCount++;
+                    else if (morningStatus === 'sakit') sakitCount++;
+                    else if (morningStatus === 'izin') izinCount++;
+                    else if (morningStatus === 'alfa') alfaCount++;
+                    else if (morningStatus === 'libur') liburCount++;
+                    
+                    if (afternoonStatus === 'hadir') hadirCount++;
+                    else if (afternoonStatus === 'sakit') sakitCount++;
+                    else if (afternoonStatus === 'izin') izinCount++;
+                    else if (afternoonStatus === 'alfa') alfaCount++;
+                    else if (afternoonStatus === 'libur') liburCount++;
+                    
+                    const morningTd = document.createElement('td');
+                    morningTd.className = 'px-2 py-4 whitespace-nowrap text-sm text-center';
+                    morningTd.innerHTML = getStatusIcon(morningStatus);
+                    morningTd.dataset.date = dateStr;
+                    morningTd.dataset.session = 'morning';
+                    morningTd.dataset.studentId = student.id;
+                    morningTd.classList.add('attendance-cell');
+                    morningTd.title = 'Klik untuk edit';
+                    morningTd.style.cursor = 'pointer';
+                    morningTd.addEventListener('click', () => showEditAttendanceModal(student, dateStr, 'morning', morningStatus));
+                    row.appendChild(morningTd);
+                    
+                    const afternoonTd = document.createElement('td');
+                    afternoonTd.className = 'px-2 py-4 whitespace-nowrap text-sm text-center';
+                    afternoonTd.innerHTML = getStatusIcon(afternoonStatus);
+                    afternoonTd.dataset.date = dateStr;
+                    afternoonTd.dataset.session = 'afternoon';
+                    afternoonTd.dataset.studentId = student.id;
+                    afternoonTd.classList.add('attendance-cell');
+                    afternoonTd.title = 'Klik untuk edit';
+                    afternoonTd.style.cursor = 'pointer';
+                    afternoonTd.addEventListener('click', () => showEditAttendanceModal(student, dateStr, 'afternoon', afternoonStatus));
+                    row.appendChild(afternoonTd);
+                });
+                
+                // Add summary cells
+                const hadirTd = document.createElement('td');
+                hadirTd.className = 'px-2 py-4 whitespace-nowrap text-sm text-center font-medium text-green-800';
+                hadirTd.textContent = hadirCount;
+                row.appendChild(hadirTd);
+                
+                const sakitTd = document.createElement('td');
+                sakitTd.className = 'px-2 py-4 whitespace-nowrap text-sm text-center font-medium text-yellow-800';
+                sakitTd.textContent = sakitCount;
+                row.appendChild(sakitTd);
+                
+                const izinTd = document.createElement('td');
+                izinTd.className = 'px-2 py-4 whitespace-nowrap text-sm text-center font-medium text-blue-800';
+                izinTd.textContent = izinCount;
+                row.appendChild(izinTd);
+                
+                const alfaTd = document.createElement('td');
+                alfaTd.className = 'px-2 py-4 whitespace-nowrap text-sm text-center font-medium text-red-800';
+                alfaTd.textContent = alfaCount;
+                row.appendChild(alfaTd);
+                
+                const liburTd = document.createElement('td');
+                liburTd.className = 'px-2 py-4 whitespace-nowrap text-sm text-center font-medium text-gray-800';
+                liburTd.textContent = liburCount;
+                row.appendChild(liburTd);
+                
+                // Add warning class if alfa count is more than 3
+                if (alfaCount > 3) {
+                    row.classList.add('alfa-warning');
+                }
+                
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // Search students for editing attendance
+        function searchStudents() {
+            const searchTerm = document.getElementById('editStudentSearch').value.trim().toLowerCase();
+            const date = document.getElementById('editAttendanceDate').value;
+            const session = document.getElementById('editAttendanceSession').value;
+            const searchResults = document.getElementById('searchResults');
+            const searchResultsList = document.getElementById('searchResultsList');
+            
+            // Clear previous results
+            searchResultsList.innerHTML = '';
+            
+            // Show/hide search results container
+            if (searchTerm.length < 2) {
+                searchResults.classList.add('hidden');
+                return;
+            }
+            
+            // Filter students by search term
+            const matchingStudents = students.filter(student => 
+                student.name.toLowerCase().includes(searchTerm)
+            );
+            
+            if (matchingStudents.length === 0) {
+                searchResultsList.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">
+                            Tidak ada siswa yang ditemukan
+                        </td>
+                    </tr>
+                `;
+            } else {
+                // Sort students by name
+                const sortedStudents = [...matchingStudents].sort((a, b) => a.name.localeCompare(b.name));
+                
+                // Get attendance data for the selected date and session
+                const dateKey = `${date}-${session}`;
+                
+                sortedStudents.forEach(student => {
+                    const status = attendanceData[session][dateKey]?.find(s => s.id === student.id)?.status || '-';
+                    
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${student.class}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${student.number}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${student.name}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-center">${getStatusIcon(status)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-right">
+                            <button class="text-indigo-600 hover:text-indigo-900 edit-attendance-btn">
+                                Edit
+                            </button>
+                        </td>
+                    `;
+                    
+                    searchResultsList.appendChild(row);
+                    
+                    // Add event listener to edit button
+                    const editBtn = row.querySelector('.edit-attendance-btn');
+                    editBtn.addEventListener('click', () => showEditAttendanceModal(student, date, session, status));
+                });
+            }
+            
+            searchResults.classList.remove('hidden');
+        }
+        
+        // Show edit attendance modal
+        function showEditAttendanceModal(student, date, session, currentStatus) {
+            // Set student info in modal
+            document.getElementById('editStudentName').textContent = student.name;
+            document.getElementById('editStudentClass').textContent = `${student.class} (${student.number})`;
+            document.getElementById('editStudentDate').textContent = formatDate(new Date(date));
+            document.getElementById('editStudentSession').textContent = session === 'morning' ? 'Pagi' : 'Siang';
+            
+            // Set current status
+            const statusRadios = document.getElementsByName('editAttendanceStatus');
+            statusRadios.forEach(radio => {
+                radio.checked = radio.value === currentStatus;
+            });
+            
+            // If no status is selected, default to first option
+            if (!Array.from(statusRadios).some(radio => radio.checked) && statusRadios.length > 0) {
+                statusRadios[0].checked = true;
+            }
+            
+            // Store data for saving
+            editingAttendanceData = {
+                student,
+                date,
+                session
+            };
+            
+            // Show modal
+            document.getElementById('editAttendanceModal').classList.remove('hidden');
+        }
+        
+        // Hide edit attendance modal
+        function hideEditAttendanceModal() {
+            document.getElementById('editAttendanceModal').classList.add('hidden');
+            editingAttendanceData = null;
+        }
+        
+        // Save edited attendance
+        function saveEditedAttendance() {
+            if (!editingAttendanceData) return;
+            
+            const { student, date, session } = editingAttendanceData;
+            const dateKey = `${date}-${session}`;
+            const selectedStatus = document.querySelector('input[name="editAttendanceStatus"]:checked').value;
+            
+            // Initialize attendance data for this date if it doesn't exist
+            if (!attendanceData[session][dateKey]) {
+                attendanceData[session][dateKey] = [];
+            }
+            
+            // Find existing record or create new one
+            const existingIndex = attendanceData[session][dateKey].findIndex(s => s.id === student.id);
+            
+            if (existingIndex >= 0) {
+                // Update existing record
+                attendanceData[session][dateKey][existingIndex].status = selectedStatus;
+            } else {
+                // Add new record
+                attendanceData[session][dateKey].push({
+                    id: student.id,
+                    name: student.name,
+                    class: student.class,
+                    number: student.number,
+                    status: selectedStatus
+                });
+            }
+            
+            // Hide modal
+            hideEditAttendanceModal();
+            
+            // Update report and search results
+            generateReport();
+            searchStudents();
+            
+            // Show success notification
+            const notification = document.createElement('div');
+            notification.className = 'fixed bottom-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded z-50';
+            notification.innerHTML = `
+                <div class="flex">
+                    <svg class="h-5 w-5 text-green-500 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                    <p>Status kehadiran berhasil diperbarui!</p>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Remove notification after 3 seconds
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+        
+        // Get status icon
+        function getStatusIcon(status) {
+            switch (status) {
+                case 'hadir':
+                    return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">H</span>';
+                case 'sakit':
+                    return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">S</span>';
+                case 'izin':
+                    return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">I</span>';
+                case 'alfa':
+                    return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">A</span>';
+                case 'libur':
+                    return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">L</span>';
+                default:
+                    return '<span class="text-gray-400">-</span>';
+            }
+        }
+        
+        // Print report
+        function printReport() {
+            const reportType = document.getElementById('reportType').value;
+            const selectedClass = document.getElementById('reportClassFilter').value;
+            const title = `Rekap Absensi ${reportType === 'weekly' ? 'Mingguan' : 'Bulanan'}`;
+            const subtitle = selectedClass === 'all' ? 'Semua Kelas' : `Kelas ${selectedClass}`;
+            
+            // Create a new window for printing
+            const printWindow = window.open('', '_blank');
+            
+            // Get the report container content
+            const reportContent = document.getElementById('reportContainer').innerHTML;
+            
+            // Create print document
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>${title} - ${subtitle}</title>
+                    <style>
+                        body {
+                            font-family: Arial, sans-serif;
+                            margin: 20px;
+                        }
+                        .header {
+                            text-align: center;
+                            margin-bottom: 20px;
+                        }
+                        .header img {
+                            height: 60px;
+                        }
+                        table {
+                            width: 100%;
+                            border-collapse: collapse;
+                        }
+                        th, td {
+                            border: 1px solid #ddd;
+                            padding: 8px;
+                            text-align: left;
+                        }
+                        th {
+                            background-color: #f2f2f2;
+                        }
+                        .status-hadir {
+                            background-color: #D1FAE5;
+                            color: #065F46;
+                            padding: 2px 6px;
+                            border-radius: 9999px;
+                            font-weight: 500;
+                        }
+                        .status-sakit {
+                            background-color: #FEF3C7;
+                            color: #92400E;
+                            padding: 2px 6px;
+                            border-radius: 9999px;
+                            font-weight: 500;
+                        }
+                        .status-izin {
+                            background-color: #DBEAFE;
+                            color: #1E40AF;
+                            padding: 2px 6px;
+                            border-radius: 9999px;
+                            font-weight: 500;
+                        }
+                        .status-alfa {
+                            background-color: #FEE2E2;
+                            color: #B91C1C;
+                            padding: 2px 6px;
+                            border-radius: 9999px;
+                            font-weight: 500;
+                        }
+                        .status-libur {
+                            background-color: #F3F4F6;
+                            color: #4B5563;
+                            padding: 2px 6px;
+                            border-radius: 9999px;
+                            font-weight: 500;
+                        }
+                        .alfa-warning {
+                            background-color: rgba(239, 68, 68, 0.2);
+                        }
+                        .holiday-row {
+                            background-color: #FEF3C7;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <img src="https://iili.io/FEj6Osp.png" alt="MTs Al Futuhiyyah Logo">
+                        <h1>MTs Al Futuhiyyah Kabupaten Boyolali</h1>
+                        <p>Tahun Pelajaran 2025/2026</p>
+                        <h2>${title} - ${subtitle}</h2>
+                    </div>
+                    ${reportContent}
+                </body>
+                </html>
+            `);
+            
+            // Print the document
+            setTimeout(() => {
+                printWindow.document.close();
+                printWindow.print();
+            }, 500);
+        }
+        
+        // Open manage students page
+        function openManageStudentsPage() {
+            showPage('manageStudentsPage');
+            hideAddStudentForm();
+            hideBulkAddStudentForm();
+            document.getElementById('studentSuccess').classList.add('hidden');
+            filterManageStudentsByClass();
+        }
+        
+        // Filter students in manage page
+        function filterManageStudentsByClass() {
+            const selectedClass = document.getElementById('manageClassFilter').value;
+            const filteredStudents = selectedClass === 'all' 
+                ? students 
+                : students.filter(student => student.class === selectedClass);
+            
+            populateManageStudentList(filteredStudents);
+        }
+        
+        // Populate student list in manage page
+        function populateManageStudentList(studentList) {
+            const studentListElement = document.getElementById('manageStudentList');
+            studentListElement.innerHTML = '';
+            
+            if (studentList.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">
+                        Tidak ada data siswa untuk kelas yang dipilih
+                    </td>
+                `;
+                studentListElement.appendChild(row);
+                return;
+            }
+            
+            // Sort students by class and then by number
+            const sortedStudents = [...studentList].sort((a, b) => {
+                if (a.class !== b.class) {
+                    return a.class.localeCompare(b.class);
+                }
+                return a.number - b.number;
+            });
+            
+            sortedStudents.forEach(student => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${student.class}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${student.number}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${student.name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right">
+                        <button class="text-indigo-600 hover:text-indigo-900 mr-3 edit-student" data-id="${student.id}">
+                            Edit
+                        </button>
+                        <button class="text-red-600 hover:text-red-900 delete-student" data-id="${student.id}">
+                            Hapus
+                        </button>
+                    </td>
+                `;
+                
+                studentListElement.appendChild(row);
+            });
+            
+            // Add event listeners for edit and delete buttons
+            document.querySelectorAll('.edit-student').forEach(button => {
+                button.addEventListener('click', () => editStudent(button.dataset.id));
+            });
+            
+            document.querySelectorAll('.delete-student').forEach(button => {
+                button.addEventListener('click', () => deleteStudent(button.dataset.id));
+            });
+        }
+        
+        // Show add student form
+        function showAddStudentForm() {
+            document.getElementById('addStudentForm').classList.remove('hidden');
+            document.getElementById('bulkAddStudentForm').classList.add('hidden');
+            document.getElementById('studentForm').reset();
+            document.getElementById('studentSuccess').classList.add('hidden');
+            editingStudentId = null;
+        }
+        
+        // Hide add student form
+        function hideAddStudentForm() {
+            document.getElementById('addStudentForm').classList.add('hidden');
+            document.getElementById('studentForm').reset();
+            editingStudentId = null;
+        }
+        
+        // Show bulk add student form
+        function showBulkAddStudentForm() {
+            document.getElementById('bulkAddStudentForm').classList.remove('hidden');
+            document.getElementById('addStudentForm').classList.add('hidden');
+            document.getElementById('bulkStudentForm').reset();
+            document.getElementById('studentSuccess').classList.add('hidden');
+        }
+        
+        // Hide bulk add student form
+        function hideBulkAddStudentForm() {
+            document.getElementById('bulkAddStudentForm').classList.add('hidden');
+            document.getElementById('bulkStudentForm').reset();
+        }
+        
+        // Handle add/edit student
+        function handleAddStudent(e) {
+            e.preventDefault();
+            
+            const studentClass = document.getElementById('studentClass').value;
+            const studentNumber = parseInt(document.getElementById('studentNumber').value);
+            const studentName = document.getElementById('studentName').value;
+            
+            // Check if student number already exists in the selected class
+            const isDuplicate = students.some(student => 
+                student.class === studentClass && 
+                student.number === studentNumber && 
+                (!editingStudentId || student.id !== parseInt(editingStudentId))
+            );
+            
+            if (isDuplicate) {
+                alert(`Nomor ${studentNumber} sudah ada di kelas ${studentClass}. Silakan gunakan nomor lain.`);
+                return;
+            }
+            
+            if (editingStudentId) {
+                // Update existing student
+                const studentIndex = students.findIndex(s => s.id === parseInt(editingStudentId));
+                if (studentIndex !== -1) {
+                    students[studentIndex].class = studentClass;
+                    students[studentIndex].number = studentNumber;
+                    students[studentIndex].name = studentName;
+                    
+                    document.getElementById('studentSuccessMessage').textContent = 'Data siswa berhasil diperbarui!';
+                }
+            } else {
+                // Add new student
+                const newId = students.length > 0 ? Math.max(...students.map(s => s.id)) + 1 : 1;
+                
+                students.push({
+                    id: newId,
+                    class: studentClass,
+                    number: studentNumber,
+                    name: studentName
+                });
+                
+                document.getElementById('studentSuccessMessage').textContent = 'Data siswa berhasil ditambahkan!';
+            }
+            
+            // Reset form and show success message
+            document.getElementById('studentForm').reset();
+            document.getElementById('studentSuccess').classList.remove('hidden');
+            document.getElementById('addStudentForm').classList.add('hidden');
+            editingStudentId = null;
+            
+            // Update student lists
+            filterManageStudentsByClass();
+            
+            // Scroll to success message
+            document.getElementById('studentSuccess').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Handle bulk add students
+        function handleBulkAddStudent(e) {
+            e.preventDefault();
+            
+            const studentClass = document.getElementById('bulkStudentClass').value;
+            const bulkData = document.getElementById('bulkStudentData').value;
+            
+            // Split data by lines
+            const lines = bulkData.split('\n').filter(line => line.trim() !== '');
+            
+            if (lines.length === 0) {
+                alert('Silakan masukkan data siswa terlebih dahulu.');
+                return;
+            }
+            
+            // Process each line
+            const newStudents = [];
+            const errors = [];
+            const existingNumbers = students
+                .filter(s => s.class === studentClass)
+                .map(s => s.number);
+            
+            lines.forEach((line, index) => {
+                // Parse line (format: number, name)
+                const parts = line.split(',').map(part => part.trim());
+                
+                if (parts.length < 2) {
+                    errors.push(`Baris ${index + 1}: Format tidak valid. Gunakan format: nomor, nama`);
+                    return;
+                }
+                
+                const number = parseInt(parts[0]);
+                if (isNaN(number)) {
+                    errors.push(`Baris ${index + 1}: Nomor siswa harus berupa angka`);
+                    return;
+                }
+                
+                const name = parts.slice(1).join(',').trim();
+                if (!name) {
+                    errors.push(`Baris ${index + 1}: Nama siswa tidak boleh kosong`);
+                    return;
+                }
+                
+                // Check for duplicate numbers in the same class
+                if (existingNumbers.includes(number) || newStudents.some(s => s.number === number)) {
+                    errors.push(`Baris ${index + 1}: Nomor ${number} sudah ada di kelas ${studentClass}`);
+                    return;
+                }
+                
+                newStudents.push({
+                    number,
+                    name,
+                    class: studentClass
+                });
+                
+                // Add to existing numbers to prevent duplicates in subsequent lines
+                existingNumbers.push(number);
+            });
+            
+            // Show errors if any
+            if (errors.length > 0) {
+                alert(`Terdapat kesalahan dalam data:\n\n${errors.join('\n')}`);
+                return;
+            }
+            
+            // Add new students
+            let newId = students.length > 0 ? Math.max(...students.map(s => s.id)) + 1 : 1;
+            
+            newStudents.forEach(student => {
+                students.push({
+                    id: newId++,
+                    class: student.class,
+                    number: student.number,
+                    name: student.name
+                });
+            });
+            
+            // Reset form and show success message
+            document.getElementById('bulkStudentForm').reset();
+            document.getElementById('studentSuccessMessage').textContent = `${newStudents.length} siswa berhasil ditambahkan ke kelas ${studentClass}!`;
+            document.getElementById('studentSuccess').classList.remove('hidden');
+            document.getElementById('bulkAddStudentForm').classList.add('hidden');
+            
+            // Update student lists
+            filterManageStudentsByClass();
+            
+            // Scroll to success message
+            document.getElementById('studentSuccess').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Edit student
+        function editStudent(id) {
+            const student = students.find(s => s.id === parseInt(id));
+            if (!student) return;
+            
+            editingStudentId = id;
+            
+            document.getElementById('studentClass').value = student.class;
+            document.getElementById('studentNumber').value = student.number;
+            document.getElementById('studentName').value = student.name;
+            
+            document.getElementById('addStudentForm').classList.remove('hidden');
+            document.getElementById('bulkAddStudentForm').classList.add('hidden');
+            document.getElementById('studentSuccess').classList.add('hidden');
+            
+            // Scroll to form
+            document.getElementById('addStudentForm').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Delete student
+        function deleteStudent(id) {
+            if (!confirm('Apakah Anda yakin ingin menghapus data siswa ini?')) return;
+            
+            const studentIndex = students.findIndex(s => s.id === parseInt(id));
+            if (studentIndex !== -1) {
+                students.splice(studentIndex, 1);
+                
+                // Show success message
+                document.getElementById('studentSuccessMessage').textContent = 'Data siswa berhasil dihapus!';
+                document.getElementById('studentSuccess').classList.remove('hidden');
+                
+                // Update student lists
+                filterManageStudentsByClass();
+                
+                // Scroll to success message
+                document.getElementById('studentSuccess').scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+        
+        // Helper functions for date handling
+        function getISOWeek(date) {
+            const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+            d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+        }
+        
+        function getWeekDates(weekString) {
+            if (!weekString) return [];
+            
+            const [year, week] = weekString.split('-W').map(Number);
+            const firstDayOfYear = new Date(year, 0, 1);
+            const daysOffset = (8 - firstDayOfYear.getDay()) % 7;
+            
+            const firstDayOfWeek = new Date(year, 0, 1 + daysOffset + (week - 1) * 7);
+            
+            const dates = [];
+            for (let i = 0; i < 7; i++) { // All days of the week
+                const date = new Date(firstDayOfWeek);
+                date.setDate(firstDayOfWeek.getDate() + i);
+                
+                // Only include school days (not Friday)
+                const dayOfWeek = date.getDay() === 0 ? 7 : date.getDay(); // Convert Sunday from 0 to 7
+                if (schoolDays.includes(dayOfWeek)) {
+                    dates.push(date);
+                }
+            }
+            
+            return dates;
+        }
+        
+        function getMonthDates(monthString) {
+            if (!monthString) return [];
+            
+            const [year, month] = monthString.split('-').map(Number);
+            const daysInMonth = new Date(year, month, 0).getDate();
+            
+            const dates = [];
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month - 1, day);
+                
+                // Only include school days (not Friday)
+                const dayOfWeek = date.getDay() === 0 ? 7 : date.getDay(); // Convert Sunday from 0 to 7
+                if (schoolDays.includes(dayOfWeek)) {
+                    dates.push(date);
+                }
+            }
+            
+            return dates;
+        }
+        
+        function formatShortDate(date) {
+            return date.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit' });
+        }
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9633c680704afdc7',t:'MTc1MzE5NjA4OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
